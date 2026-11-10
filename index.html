@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-R-T Goals-Quests</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0d0d0d;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border-color: #ffffff;
+            --pink-accent: #ff007f;
+            --btn-green: #00e65c;
+            --btn-green-hover: #00b347;
+            --btn-red: #ff3344;
+            --btn-red-hover: #cc1122;
+            --font-pixel: 'Press Start 2P', monospace;
+            --font-arcade: 'VT323', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-pixel);
+            min-height: 100vh;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* CRT Scanlines Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.35) 50%
+            );
+            background-size: 100% 4px;
+            z-index: 999;
+            opacity: 0.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            z-index: 10;
+        }
+
+        /* Top Header & Main Level HUD */
+        header {
+            border: 4px solid var(--border-color);
+            background: var(--card-bg);
+            padding: 16px;
+            box-shadow: 6px 6px 0px #000, 6px 6px 0px 4px var(--border-color);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            color: var(--text-main);
+            text-shadow: 2px 2px #000;
+        }
+
+        .hud-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #000;
+            border: 2px solid var(--border-color);
+            padding: 10px;
+        }
+
+        .hud-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+        }
+
+        .level-text { color: #fff; }
+        .exp-text { color: var(--pink-accent); }
+
+        .bar-outer {
+            width: 100%;
+            height: 16px;
+            background: #222;
+            border: 2px solid var(--border-color);
+            position: relative;
+        }
+
+        .bar-inner-pink {
+            height: 100%;
+            background-color: var(--pink-accent);
+            width: 0%;
+            transition: width 0.3s ease-out;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.3);
+        }
+
+        /* Categories Section */
+        .category-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cat-card-full {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: transform 0.1s;
+        }
+
+        .cat-card-full:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        .cat-card-full.active {
+            border-color: #ffffff;
+            background: #1a1a1a;
+            box-shadow: 4px 4px 0px var(--pink-accent);
+        }
+
+        .cat-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cat-title {
+            font-size: 0.7rem;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .cat-level-badge {
+            font-size: 0.55rem;
+            color: #000;
+            background: #fff;
+            padding: 2px 6px;
+            font-weight: bold;
+        }
+
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        @media (min-width: 650px) {
+            .cat-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* Status Filters */
+        .filter-controls {
+            display: flex;
+            gap: 6px;
+            background: #000;
+            border: 2px solid var(--border-color);
+            padding: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #111;
+            border: 2px solid #444;
+            color: #888;
+            padding: 8px 10px;
+            font-family: var(--font-pixel);
+            font-size: 0.5rem;
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            font-weight: bold;
+        }
+
+        /* Main Controls */
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-green-main {
+            background: var(--btn-green);
+            color: #000;
+            border: 3px solid var(--border-color);
+            padding: 12px 16px;
+            font-family: var(--font-pixel);
+            font-size: 0.65rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-green-main:hover { background: var(--btn-green-hover); }
+        .btn-green-main:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+
+        /* Quest Cards */
+        .quest-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .quest-card {
+            background: var(--card-bg);
+            border: 4px solid var(--border-color);
+            padding: 14px;
+            box-shadow: 5px 5px 0px #000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+
+        .quest-card.completed-card {
+            opacity: 0.85;
+            border-style: dashed;
+        }
+
+        .quest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .quest-title-area {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .quest-title {
+            font-size: 0.8rem;
+            color: #fff;
+            line-height: 1.3;
+        }
+
+        .quest-category-tag {
+            font-size: 0.5rem;
+            padding: 3px 6px;
+            background: #222;
+            border: 1px solid #555;
+            color: #ccc;
+            width: fit-content;
+            text-transform: uppercase;
+        }
+
+        .status-badge {
+            font-size: 0.55rem;
+            padding: 4px 8px;
+            border: 2px solid #fff;
+            font-weight: bold;
+        }
+        .status-badge.green { background: #00e65c; color: #000; }
+        .status-badge.yellow { background: #ffcc00; color: #000; }
+        .status-badge.red { background: #ff3344; color: #fff; }
+
+        .quest-dates {
+            font-family: var(--font-arcade);
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: #000;
+            padding: 6px 8px;
+            border: 1px solid #333;
+        }
+
+        .quest-dates span { color: #fff; }
+
+        .progress-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.6rem;
+        }
+
+        .pink-percent {
+            color: var(--pink-accent);
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        .xp-reward-tag {
+            font-size: 0.55rem;
+            color: #fff;
+            background: #111;
+            padding: 2px 5px;
+            border: 1px dashed #666;
+        }
+
+        .quest-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .pixel-btn {
+            font-family: var(--font-pixel);
+            font-size: 0.55rem;
+            padding: 8px 10px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            box-shadow: 3px 3px 0px #000;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: transform 0.05s;
+        }
+
+        .pixel-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
+        .btn-add { background: var(--btn-green); color: #000; font-weight: bold; }
+        .btn-add:hover { background: var(--btn-green-hover); }
+        .btn-remove { background: var(--btn-red); color: #fff; font-weight: bold; }
+        .btn-remove:hover { background: var(--btn-red-hover); }
+        .btn-complete { background: var(--btn-green); color: #000; font-weight: bold; flex-grow: 1; }
+        .btn-delete { background: var(--btn-red); color: #fff; font-weight: bold; }
+
+        /* Reset Section */
+        .reset-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #333;
+            text-align: center;
+        }
+
+        .btn-reset-all {
+            background: #1a0003;
+            color: #ff3344;
+            border: 2px solid #ff3344;
+            padding: 10px 14px;
+            font-family: var(--font-pixel);
+            font-size: 0.55rem;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px #000;
+        }
+
+        .btn-reset-all:hover { background: #ff3344; color: #fff; }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .pixel-modal {
+            background: #000000;
+            border: 4px solid #ffffff;
+            box-shadow: 8px 8px 0px #000, 0 0 0 4px #000;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        .modal-header {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+            color: #fff;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+        }
+
+        .pixel-input, .pixel-select {
+            background: #111;
+            border: 2px solid var(--border-color);
+            color: #fff;
+            font-family: var(--font-pixel);
+            font-size: 0.65rem;
+            padding: 10px;
+            outline: none;
+        }
+
+        .pixel-input:focus, .pixel-select:focus { border-color: var(--pink-accent); }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .eval-window { text-align: center; align-items: center; }
+        .eval-title { font-size: 0.9rem; line-height: 1.4; margin-top: 10px; }
+        .eval-icon { margin: 15px 0; display: flex; justify-content: center; }
+        .eval-green { color: #00e65c; }
+        .eval-yellow { color: #ffcc00; }
+        .eval-red { color: #ff3344; }
+        .eval-desc { font-size: 0.55rem; color: #ccc; line-height: 1.5; margin-bottom: 10px; }
+
+        .pixel-icon-svg { image-rendering: pixelated; shape-rendering: crispEdges; }
+        .trophy-svg { width: 64px; height: 64px; }
+        .warning-svg { width: 64px; height: 64px; }
+        .stop-svg { width: 64px; height: 64px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 10px;
+            border: 2px dashed #444;
+            color: var(--text-muted);
+            font-size: 0.6rem;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+
+    <div class="container">
+        <!-- Header HUD -->
+        <header>
+            <h1>C-R-T goals-quests</h1>
+            <div class="hud-container">
+                <div class="hud-row">
+                    <span class="level-text" id="globalLevelText">OVERALL LEVEL 1</span>
+                    <span class="exp-text" id="globalExpText">0 / 100 EXP</span>
+                </div>
+                <div class="bar-outer">
+                    <div class="bar-inner-pink" id="globalExpBar"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Categories & Levels -->
+        <div class="category-section">
+            <!-- ALL CATEGORIES -->
+            <div class="cat-card-full active" id="catBtn-all" onclick="setCategory('all')">
+                <div class="cat-header-row">
+                    <span class="cat-title">ALL CATEGORIES</span>
+                    <span class="cat-level-badge" id="catBadge-all">OVERVIEW</span>
+                </div>
+                <div class="progress-info">
+                    <span id="catExpText-all">0 / 100 EXP</span>
+                    <span class="pink-percent" id="catPercent-all">0%</span>
+                </div>
+                <div class="bar-outer">
+                    <div class="bar-inner-pink" id="catBar-all"></div>
+                </div>
+            </div>
+
+            <!-- CAREER -->
+            <div class="cat-card-full" id="catBtn-career" onclick="setCategory('career')">
+                <div class="cat-header-row">
+                    <span class="cat-title">CAREER</span>
+                    <span class="cat-level-badge" id="catBadge-career">LEVEL 1</span>
+                </div>
+                <div class="progress-info">
+                    <span id="catExpText-career">0 / 100 EXP</span>
+                    <span class="pink-percent" id="catPercent-career">0%</span>
+                </div>
+                <div class="bar-outer">
+                    <div class="bar-inner-pink" id="catBar-career"></div>
+                </div>
+            </div>
+
+            <!-- 4 Grid Categories -->
+            <div class="cat-grid">
+                <!-- Psychological -->
+                <div class="cat-card-full" id="catBtn-psychological" onclick="setCategory('psychological')">
+                    <div class="cat-header-row">
+                        <span class="cat-title">PSYCHOLOGICAL</span>
+                        <span class="cat-level-badge" id="catBadge-psychological">LEVEL 1</span>
+                    </div>
+                    <div class="progress-info">
+                        <span id="catExpText-psychological">0/100 EXP</span>
+                        <span class="pink-percent" id="catPercent-psychological">0%</span>
+                    </div>
+                    <div class="bar-outer">
+                        <div class="bar-inner-pink" id="catBar-psychological"></div>
+                    </div>
+                </div>
+
+                <!-- Mental -->
+                <div class="cat-card-full" id="catBtn-mental" onclick="setCategory('mental')">
+                    <div class="cat-header-row">
+                        <span class="cat-title">MENTAL</span>
+                        <span class="cat-level-badge" id="catBadge-mental">LEVEL 1</span>
+                    </div>
+                    <div class="progress-info">
+                        <span id="catExpText-mental">0/100 EXP</span>
+                        <span class="pink-percent" id="catPercent-mental">0%</span>
+                    </div>
+                    <div class="bar-outer">
+                        <div class="bar-inner-pink" id="catBar-mental"></div>
+                    </div>
+                </div>
+
+                <!-- Physical -->
+                <div class="cat-card-full" id="catBtn-physical" onclick="setCategory('physical')">
+                    <div class="cat-header-row">
+                        <span class="cat-title">PHYSICAL</span>
+                        <span class="cat-level-badge" id="catBadge-physical">LEVEL 1</span>
+                    </div>
+                    <div class="progress-info">
+                        <span id="catExpText-physical">0/100 EXP</span>
+                        <span class="pink-percent" id="catPercent-physical">0%</span>
+                    </div>
+                    <div class="bar-outer">
+                        <div class="bar-inner-pink" id="catBar-physical"></div>
+                    </div>
+                </div>
+
+                <!-- Scientific -->
+                <div class="cat-card-full" id="catBtn-scientific" onclick="setCategory('scientific')">
+                    <div class="cat-header-row">
+                        <span class="cat-title">SCIENTIFIC</span>
+                        <span class="cat-level-badge" id="catBadge-scientific">LEVEL 1</span>
+                    </div>
+                    <div class="progress-info">
+                        <span id="catExpText-scientific">0/100 EXP</span>
+                        <span class="pink-percent" id="catPercent-scientific">0%</span>
+                    </div>
+                    <div class="bar-outer">
+                        <div class="bar-inner-pink" id="catBar-scientific"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+            <button class="filter-btn active" id="filterBtn-all" onclick="setStatusFilter('all')">ALL QUESTS</button>
+            <button class="filter-btn" id="filterBtn-active" onclick="setStatusFilter('active')">IN PROGRESS</button>
+            <button class="filter-btn" id="filterBtn-completed" onclick="setStatusFilter('completed')">COMPLETED</button>
+        </div>
+
+        <!-- Add Quest Button -->
+        <div class="controls-row">
+            <button class="btn-green-main" onclick="openAddModal()">
+                <svg class="pixel-icon-svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <rect x="5" y="1" width="2" height="10" fill="black"/>
+                    <rect x="1" y="5" width="10" height="2" fill="black"/>
+                </svg>
+                ADD QUEST
+            </button>
+        </div>
+
+        <!-- Quest List -->
+        <div class="quest-list" id="questList"></div>
+
+        <!-- Full Reset Section -->
+        <div class="reset-section">
+            <button class="btn-reset-all" onclick="confirmResetAll()">
+                RESET ALL STATS & PROGRESS
+            </button>
+        </div>
+    </div>
+
+    <!-- Create/Edit Quest Modal -->
+    <div class="modal-overlay" id="questModal">
+        <div class="pixel-modal">
+            <div class="modal-header" id="modalTitle">NEW QUEST</div>
+            
+            <div class="form-group">
+                <label for="inputTitle">QUEST TITLE:</label>
+                <input type="text" id="inputTitle" class="pixel-input" placeholder="e.g. Job Promotion">
+            </div>
+
+            <div class="form-group">
+                <label for="inputCategory">CATEGORY:</label>
+                <select id="inputCategory" class="pixel-select">
+                    <option value="career">Career</option>
+                    <option value="psychological">Psychological</option>
+                    <option value="mental">Mental</option>
+                    <option value="physical">Physical</option>
+                    <option value="scientific">Scientific</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="inputXP">EXPERIENCE REWARD (EXP):</label>
+                <input type="number" id="inputXP" class="pixel-input" value="50" min="10" step="10">
+            </div>
+
+            <div class="form-group">
+                <label for="inputStart">START DATE & TIME:</label>
+                <input type="datetime-local" id="inputStart" class="pixel-input">
+            </div>
+
+            <div class="form-group">
+                <label for="inputEnd">DEADLINE DATE & TIME:</label>
+                <input type="datetime-local" id="inputEnd" class="pixel-input">
+            </div>
+
+            <div class="modal-footer">
+                <button class="pixel-btn btn-remove" onclick="closeAddModal()">CANCEL</button>
+                <button class="pixel-btn btn-add" onclick="saveQuest()">SAVE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evaluation Result Modal -->
+    <div class="modal-overlay" id="evalModal">
+        <div class="pixel-modal eval-window">
+            <div id="evalIconContainer" class="eval-icon"></div>
+            <div id="evalTitle" class="eval-title"></div>
+            <div id="evalDesc" class="eval-desc"></div>
+            <button class="pixel-btn btn-add" style="margin-top: 15px; width: 100%;" onclick="closeEvalModal()">UNDERSTOOD</button>
+        </div>
+    </div>
+
+    <script>
+        /* Web Audio Synth */
+        class RetroAudio {
+            constructor() { this.ctx = null; }
+
+            init() {
+                try {
+                    if (!this.ctx) {
+                        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                } catch(e) {}
+            }
+
+            playDrop() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(800, now);
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(420, now);
+                    osc.frequency.exponentialRampToValueAtTime(680, now + 0.07);
+
+                    gain.gain.setValueAtTime(0.001, now);
+                    gain.gain.linearRampToValueAtTime(0.1, now + 0.012);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+                    osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(now); osc.stop(now + 0.08);
+                } catch(e) {}
+            }
+
+            playTuTuTun() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const notes = [392.00, 523.25, 659.25];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        const filter = this.ctx.createBiquadFilter();
+
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(1400, now);
+
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.065);
+
+                        const startTime = now + idx * 0.065;
+                        gain.gain.setValueAtTime(0.001, startTime);
+                        gain.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.09);
+
+                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(startTime); osc.stop(startTime + 0.09);
+                    });
+                } catch(e) {}
+            }
+
+            playSubtract() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const notes = [659.25, 523.25, 392.00];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        const filter = this.ctx.createBiquadFilter();
+
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(550, now);
+
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.065);
+
+                        const startTime = now + idx * 0.065;
+                        gain.gain.setValueAtTime(0.001, startTime);
+                        gain.gain.linearRampToValueAtTime(0.08, startTime + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.09);
+
+                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(startTime); osc.stop(startTime + 0.09);
+                    });
+                } catch(e) {}
+            }
+
+            playCategoryLevelUp() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        const filter = this.ctx.createBiquadFilter();
+
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(1800, now);
+
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+                        const startTime = now + idx * 0.08;
+                        gain.gain.setValueAtTime(0.001, startTime);
+                        gain.gain.linearRampToValueAtTime(0.12, startTime + 0.015);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.14);
+
+                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(startTime); osc.stop(startTime + 0.14);
+                    });
+                } catch(e) {}
+            }
+
+            playGlobalLevelUp() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const notes = [440.00, 554.37, 659.25, 880.00, 1108.73, 1318.51];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+
+                        const startTime = now + idx * 0.07;
+                        gain.gain.setValueAtTime(0.001, startTime);
+                        gain.gain.linearRampToValueAtTime(0.1, startTime + 0.015);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.2);
+
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(startTime); osc.stop(startTime + 0.2);
+                    });
+                } catch(e) {}
+            }
+
+            playSuccessFanfare() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const melody = [{ f: 523.25, d: 0.1 }, { f: 659.25, d: 0.1 }, { f: 783.99, d: 0.1 }, { f: 1046.50, d: 0.25 }];
+                    let timeOffset = 0;
+                    melody.forEach(n => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(n.f, now + timeOffset);
+
+                        gain.gain.setValueAtTime(0.001, now + timeOffset);
+                        gain.gain.linearRampToValueAtTime(0.08, now + timeOffset + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + timeOffset + n.d);
+
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(now + timeOffset); osc.stop(now + timeOffset + n.d);
+                        timeOffset += n.d * 0.9;
+                    });
+                } catch(e) {}
+            }
+
+            playWarningJingle() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const notes = [659.25, 622.25, 659.25];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        const filter = this.ctx.createBiquadFilter();
+
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(1200, now);
+
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+
+                        const startTime = now + idx * 0.12;
+                        gain.gain.setValueAtTime(0.001, startTime);
+                        gain.gain.linearRampToValueAtTime(0.09, startTime + 0.015);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.11);
+
+                        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(startTime); osc.stop(startTime + 0.11);
+                    });
+                } catch(e) {}
+            }
+
+            playFailSound() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const notes = [220, 207.65, 196.00, 185.00];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+
+                        const startTime = now + idx * 0.1;
+                        gain.gain.setValueAtTime(0.001, startTime);
+                        gain.gain.linearRampToValueAtTime(0.06, startTime + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.09);
+
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(startTime); osc.stop(startTime + 0.09);
+                    });
+                } catch(e) {}
+            }
+        }
+
+        const audio = new RetroAudio();
+
+        /* App State */
+        let state = {
+            categoryXP: { career: 0, psychological: 0, mental: 0, physical: 0, scientific: 0 },
+            currentCategory: 'all',
+            statusFilter: 'all',
+            quests: []
+        };
+
+        const categoryNames = {
+            career: "Career",
+            psychological: "Psychological",
+            mental: "Mental",
+            physical: "Physical",
+            scientific: "Scientific"
+        };
+
+        let lastLevels = {
+            global: 1,
+            career: 1,
+            psychological: 1,
+            mental: 1,
+            physical: 1,
+            scientific: 1
+        };
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('retro_quest_tracker_v10');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && typeof parsed === 'object') state = parsed;
+                }
+            } catch(e) {}
+
+            if (!state || typeof state !== 'object') state = {};
+            if (!state.categoryXP || typeof state.categoryXP !== 'object') {
+                state.categoryXP = { career: 0, psychological: 0, mental: 0, physical: 0, scientific: 0 };
+            }
+            ['career', 'psychological', 'mental', 'physical', 'scientific'].forEach(c => {
+                if (typeof state.categoryXP[c] !== 'number' || isNaN(state.categoryXP[c])) {
+                    state.categoryXP[c] = 0;
+                }
+            });
+            if (!Array.isArray(state.quests)) {
+                state.quests = [];
+                initDefaultQuests();
+            }
+            if (!state.currentCategory) state.currentCategory = 'all';
+            if (!state.statusFilter) state.statusFilter = 'all';
+
+            const allCats = ['career', 'psychological', 'mental', 'physical', 'scientific'];
+            let totalXP = 0;
+            allCats.forEach(c => {
+                totalXP += state.categoryXP[c];
+                lastLevels[c] = calculateLevelInfo(state.categoryXP[c]).level;
+            });
+            lastLevels.global = calculateLevelInfo(totalXP).level;
+
+            checkDeadlines();
+            renderHUD();
+            renderQuests();
+
+            setInterval(checkDeadlines, 1000);
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('retro_quest_tracker_v10', JSON.stringify(state));
+            } catch(e) {}
+        }
+
+        function initDefaultQuests() {
+            const now = new Date();
+            const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            const formatDate = (d) => d.toISOString().slice(0, 16);
+
+            state.quests = [
+                {
+                    id: 'q_car_1',
+                    title: 'Prepare Final Portfolio & Resume',
+                    category: 'career',
+                    xpReward: 100,
+                    progress: 0,
+                    isFinished: false,
+                    startTime: formatDate(now),
+                    endTime: formatDate(tomorrow)
+                },
+                {
+                    id: 'q_sci_1',
+                    title: 'Read Physics Chapter 5',
+                    category: 'scientific',
+                    xpReward: 80,
+                    progress: 0,
+                    isFinished: false,
+                    startTime: formatDate(now),
+                    endTime: formatDate(tomorrow)
+                }
+            ];
+        }
+
+        function calculateLevelInfo(totalXP) {
+            let level = 1;
+            let xpRemaining = Math.max(0, Math.floor(Number(totalXP) || 0));
+
+            while (true) {
+                let requiredForNext = level * 100;
+                if (xpRemaining >= requiredForNext) {
+                    xpRemaining -= requiredForNext;
+                    level++;
+                } else {
+                    return {
+                        level: level,
+                        currentXP: xpRemaining,
+                        nextLevelXP: requiredForNext,
+                        percent: Math.min(100, Math.max(0, Math.floor((xpRemaining / requiredForNext) * 100)))
+                    };
+                }
+            }
+        }
+
+        function checkLevelUps(category, gainedXP) {
+            if (gainedXP <= 0) return;
+
+            const allCategories = ['career', 'psychological', 'mental', 'physical', 'scientific'];
+            let grandTotalXP = 0;
+
+            allCategories.forEach(cat => {
+                grandTotalXP += state.categoryXP[cat] || 0;
+            });
+
+            const newCatLevel = calculateLevelInfo(state.categoryXP[category]).level;
+            const newGlobalLevel = calculateLevelInfo(grandTotalXP).level;
+
+            let playedSound = false;
+
+            if (newGlobalLevel > lastLevels.global) {
+                audio.playGlobalLevelUp();
+                playedSound = true;
+            } else if (newCatLevel > lastLevels[category]) {
+                audio.playCategoryLevelUp();
+                playedSound = true;
+            }
+
+            lastLevels[category] = newCatLevel;
+            lastLevels.global = newGlobalLevel;
+
+            return playedSound;
+        }
+
+        function checkDeadlines() {
+            const now = new Date();
+            let updated = false;
+
+            state.quests.forEach(quest => {
+                if (!quest.isFinished && quest.endTime) {
+                    const deadline = new Date(quest.endTime);
+                    if (now >= deadline) {
+                        quest.isFinished = true;
+                        const finalProgress = quest.progress;
+
+                        if (finalProgress >= 61) {
+                            const gainedXP = Math.floor(quest.xpReward * (finalProgress / 100));
+                            state.categoryXP[quest.category] = (state.categoryXP[quest.category] || 0) + gainedXP;
+                            quest.finalResult = 'green';
+                            checkLevelUps(quest.category, gainedXP);
+                        } else if (finalProgress >= 40) {
+                            const gainedXP = Math.floor(quest.xpReward * (finalProgress / 100) * 0.5);
+                            state.categoryXP[quest.category] = (state.categoryXP[quest.category] || 0) + gainedXP;
+                            quest.finalResult = 'yellow';
+                            checkLevelUps(quest.category, gainedXP);
+                        } else {
+                            quest.finalResult = 'red';
+                        }
+                        updated = true;
+                    }
+                }
+            });
+
+            if (updated) {
+                saveState();
+                renderHUD();
+                renderQuests();
+            }
+        }
+
+        function renderHUD() {
+            const allCategories = ['career', 'psychological', 'mental', 'physical', 'scientific'];
+            const mainCategories = ['psychological', 'mental', 'physical', 'scientific'];
+            
+            let grandTotalXP = 0;
+            let mainTotalXP = 0;
+
+            allCategories.forEach(cat => {
+                const xp = state.categoryXP[cat] || 0;
+                grandTotalXP += xp;
+                if (cat !== 'career') mainTotalXP += xp;
+
+                const lvlInfo = calculateLevelInfo(xp);
+
+                const badgeElem = document.getElementById(`catBadge-${cat}`);
+                const expElem = document.getElementById(`catExpText-${cat}`);
+                const percentElem = document.getElementById(`catPercent-${cat}`);
+                const barElem = document.getElementById(`catBar-${cat}`);
+
+                if (badgeElem) badgeElem.innerText = `LEVEL ${lvlInfo.level}`;
+                if (expElem) expElem.innerText = `${lvlInfo.currentXP}/${lvlInfo.nextLevelXP} EXP`;
+                if (percentElem) percentElem.innerText = `${lvlInfo.percent}%`;
+                if (barElem) barElem.style.width = `${lvlInfo.percent}%`;
+            });
+
+            const globalLvlInfo = calculateLevelInfo(grandTotalXP);
+            const gLevel = document.getElementById('globalLevelText');
+            const gExp = document.getElementById('globalExpText');
+            const gBar = document.getElementById('globalExpBar');
+
+            if (gLevel) gLevel.innerText = `OVERALL LEVEL ${globalLvlInfo.level}`;
+            if (gExp) gExp.innerText = `${globalLvlInfo.currentXP} / ${globalLvlInfo.nextLevelXP} EXP`;
+            if (gBar) gBar.style.width = `${globalLvlInfo.percent}%`;
+
+            const mainLvlInfo = calculateLevelInfo(mainTotalXP);
+            const catExpAll = document.getElementById('catExpText-all');
+            const catPercentAll = document.getElementById('catPercent-all');
+            const catBarAll = document.getElementById('catBar-all');
+
+            if (catExpAll) catExpAll.innerText = `${mainLvlInfo.currentXP} / ${mainLvlInfo.nextLevelXP} EXP`;
+            if (catPercentAll) catPercentAll.innerText = `${mainLvlInfo.percent}%`;
+            if (catBarAll) catBarAll.style.width = `${mainLvlInfo.percent}%`;
+
+            document.querySelectorAll('.cat-card-full').forEach(card => card.classList.remove('active'));
+            const activeCard = document.getElementById(`catBtn-${state.currentCategory}`);
+            if (activeCard) activeCard.classList.add('active');
+        }
+
+        function setCategory(cat) {
+            audio.playDrop();
+            state.currentCategory = cat;
+            renderHUD();
+            renderQuests();
+        }
+
+        function setStatusFilter(filter) {
+            audio.playDrop();
+            state.statusFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`filterBtn-${filter}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            renderQuests();
+        }
+
+        function renderQuests() {
+            const container = document.getElementById('questList');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const filtered = state.quests.filter(q => {
+                if (state.currentCategory === 'all') {
+                    if (q.category === 'career') return false;
+                } else if (q.category !== state.currentCategory) {
+                    return false;
+                }
+
+                if (state.statusFilter === 'active' && q.isFinished) return false;
+                if (state.statusFilter === 'completed' && !q.isFinished) return false;
+
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state">NO QUESTS FOUND IN THIS SECTION.<br>CLICK "ADD QUEST" TO CREATE ONE.</div>`;
+                return;
+            }
+
+            filtered.forEach(quest => {
+                const card = document.createElement('div');
+                card.className = `quest-card ${quest.isFinished ? 'completed-card' : ''}`;
+
+                const startDate = quest.startTime ? quest.startTime.replace('T', ' ') : 'Not specified';
+                const endDate = quest.endTime ? quest.endTime.replace('T', ' ') : 'Not specified';
+
+                let statusBadgeHTML = '';
+                if (quest.isFinished) {
+                    if (quest.finalResult === 'green') {
+                        statusBadgeHTML = `<span class="status-badge green">COMPLETED (${quest.progress}%)</span>`;
+                    } else if (quest.finalResult === 'yellow') {
+                        statusBadgeHTML = `<span class="status-badge yellow">ALMOST COMPLETED (${quest.progress}%)</span>`;
+                    } else {
+                        statusBadgeHTML = `<span class="status-badge red">FAILED (${quest.progress}%)</span>`;
+                    }
+                }
+
+                card.innerHTML = `
+                    <div class="quest-header">
+                        <div class="quest-title-area">
+                            <span class="quest-category-tag">${categoryNames[quest.category] || quest.category}</span>
+                            <h2 class="quest-title">${escapeHTML(quest.title)}</h2>
+                            ${statusBadgeHTML}
+                        </div>
+                        <span class="xp-reward-tag">+${quest.xpReward} EXP</span>
+                    </div>
+
+                    <div class="quest-dates">
+                        <div>START: <span>${startDate}</span></div>
+                        <div>DEADLINE: <span>${endDate}</span></div>
+                    </div>
+
+                    <div class="progress-box">
+                        <div class="progress-info">
+                            <span>PROGRESS:</span>
+                            <span class="pink-percent">${quest.progress}%</span>
+                        </div>
+                        <div class="bar-outer">
+                            <div class="bar-inner-pink" style="width: ${quest.progress}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="quest-actions">
+                        ${!quest.isFinished ? `
+                            <button class="pixel-btn btn-add" onclick="changeProgress('${quest.id}', 10)">
+                                +ADD (+10%)
+                            </button>
+                            <button class="pixel-btn btn-remove" onclick="changeProgress('${quest.id}', -10)">
+                                -SUBTRACT (-10%)
+                            </button>
+                            <button class="pixel-btn btn-complete" onclick="finishQuest('${quest.id}')">
+                                COMPLETE QUEST
+                            </button>
+                        ` : ''}
+                        <button class="pixel-btn btn-delete" onclick="deleteQuest('${quest.id}')">
+                            DELETE
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function changeProgress(id, delta) {
+            const quest = state.quests.find(q => q.id === id);
+            if (!quest || quest.isFinished) return;
+
+            if (delta > 0) {
+                audio.playTuTuTun();
+            } else {
+                audio.playSubtract();
+            }
+
+            quest.progress = Math.max(0, Math.min(100, quest.progress + delta));
+            saveState();
+            renderQuests();
+        }
+
+        function deleteQuest(id) {
+            audio.playSubtract();
+            state.quests = state.quests.filter(q => q.id !== id);
+            saveState();
+            renderQuests();
+        }
+
+        function finishQuest(id) {
+            const quest = state.quests.find(q => q.id === id);
+            if (!quest || quest.isFinished) return;
+
+            const finalProgress = quest.progress;
+            quest.isFinished = true;
+            let gainedXP = 0;
+
+            if (finalProgress >= 61) {
+                gainedXP = Math.floor(quest.xpReward * (finalProgress / 100));
+                state.categoryXP[quest.category] = (state.categoryXP[quest.category] || 0) + gainedXP;
+                quest.finalResult = 'green';
+                
+                const playedLevelUpSound = checkLevelUps(quest.category, gainedXP);
+                if (!playedLevelUpSound) audio.playSuccessFanfare();
+
+                showEvalModal(
+                    'green',
+                    'trophy',
+                    'QUEST COMPLETED!',
+                    `Great job! You finished the quest at ${finalProgress}% and earned +${gainedXP} EXP in the "${categoryNames[quest.category]}" category!`
+                );
+            } else if (finalProgress >= 40) {
+                gainedXP = Math.floor(quest.xpReward * (finalProgress / 100) * 0.5);
+                state.categoryXP[quest.category] = (state.categoryXP[quest.category] || 0) + gainedXP;
+                quest.finalResult = 'yellow';
+
+                const playedLevelUpSound = checkLevelUps(quest.category, gainedXP);
+                if (!playedLevelUpSound) audio.playWarningJingle();
+
+                showEvalModal(
+                    'yellow',
+                    'warning',
+                    'QUEST ALMOST COMPLETED!',
+                    `Time is up. Quest was completed at ${finalProgress}%. Received +${gainedXP} EXP in "${categoryNames[quest.category]}".`
+                );
+            } else {
+                quest.finalResult = 'red';
+                audio.playFailSound();
+                showEvalModal(
+                    'red',
+                    'stop',
+                    'QUEST FAILED!',
+                    `Progress is only at ${finalProgress}%. The quest is considered failed. No EXP awarded.`
+                );
+            }
+
+            saveState();
+            renderHUD();
+            renderQuests();
+        }
+
+        function showEvalModal(colorClass, iconType, title, desc) {
+            const modal = document.getElementById('evalModal');
+            const iconContainer = document.getElementById('evalIconContainer');
+            const titleElem = document.getElementById('evalTitle');
+            const descElem = document.getElementById('evalDesc');
+
+            if (!modal || !iconContainer || !titleElem || !descElem) return;
+
+            titleElem.className = `eval-title eval-${colorClass}`;
+            titleElem.innerText = title;
+            descElem.innerText = desc;
+
+            if (iconType === 'trophy') {
+                iconContainer.innerHTML = `
+                    <svg class="pixel-icon-svg trophy-svg" viewBox="0 0 16 16" fill="none">
+                        <rect x="3" y="2" width="10" height="2" fill="#00e65c"/>
+                        <rect x="2" y="4" width="12" height="4" fill="#00e65c"/>
+                        <rect x="4" y="8" width="8" height="2" fill="#00e65c"/>
+                        <rect x="6" y="10" width="4" height="2" fill="#00e65c"/>
+                        <rect x="4" y="12" width="8" height="2" fill="#00e65c"/>
+                        <rect x="1" y="4" width="1" height="3" fill="#00e65c"/>
+                        <rect x="14" y="4" width="1" height="3" fill="#00e65c"/>
+                    </svg>
+                `;
+            } else if (iconType === 'warning') {
+                iconContainer.innerHTML = `
+                    <svg class="pixel-icon-svg warning-svg" viewBox="0 0 16 16" fill="none">
+                        <rect x="7" y="1" width="2" height="2" fill="#ffcc00"/>
+                        <rect x="6" y="3" width="4" height="2" fill="#ffcc00"/>
+                        <rect x="5" y="5" width="6" height="2" fill="#ffcc00"/>
+                        <rect x="4" y="7" width="8" height="2" fill="#ffcc00"/>
+                        <rect x="3" y="9" width="10" height="2" fill="#ffcc00"/>
+                        <rect x="2" y="11" width="12" height="2" fill="#ffcc00"/>
+                        <rect x="1" y="13" width="14" height="2" fill="#ffcc00"/>
+                        <rect x="7" y="5" width="2" height="5" fill="#000000"/>
+                        <rect x="7" y="11" width="2" height="2" fill="#000000"/>
+                    </svg>
+                `;
+            } else if (iconType === 'stop') {
+                iconContainer.innerHTML = `
+                    <svg class="pixel-icon-svg stop-svg" viewBox="0 0 16 16" fill="none">
+                        <rect x="5" y="1" width="6" height="14" fill="#ff3344"/>
+                        <rect x="1" y="5" width="14" height="6" fill="#ff3344"/>
+                        <rect x="3" y="3" width="10" height="10" fill="#ff3344"/>
+                        <rect x="3" y="7" width="10" height="2" fill="#ffffff"/>
+                    </svg>
+                `;
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeEvalModal() {
+            audio.playDrop();
+            const modal = document.getElementById('evalModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function openAddModal() {
+            audio.playDrop();
+            const now = new Date();
+            const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            const formatDate = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            };
+
+            document.getElementById('inputTitle').value = '';
+            document.getElementById('inputCategory').value = state.currentCategory !== 'all' ? state.currentCategory : 'career';
+            document.getElementById('inputXP').value = 50;
+            document.getElementById('inputStart').value = formatDate(now);
+            document.getElementById('inputEnd').value = formatDate(tomorrow);
+
+            document.getElementById('questModal').classList.add('active');
+        }
+
+        function closeAddModal() {
+            audio.playDrop();
+            document.getElementById('questModal').classList.remove('active');
+        }
+
+        function saveQuest() {
+            audio.playDrop();
+            const title = document.getElementById('inputTitle').value.trim();
+            const category = document.getElementById('inputCategory').value;
+            const xpReward = parseInt(document.getElementById('inputXP').value) || 50;
+            const startTime = document.getElementById('inputStart').value;
+            const endTime = document.getElementById('inputEnd').value;
+
+            if (!title) {
+                alert('Please enter a quest title!');
+                return;
+            }
+
+            const newQuest = {
+                id: 'q_' + Date.now(),
+                title: title,
+                category: category,
+                xpReward: xpReward,
+                progress: 0,
+                isFinished: false,
+                startTime: startTime,
+                endTime: endTime
+            };
+
+            state.quests.unshift(newQuest);
+            saveState();
+            renderQuests();
+            closeAddModal();
+        }
+
+        function confirmResetAll() {
+            audio.playSubtract();
+            if (confirm('ARE YOU SURE YOU WANT TO COMPLETELY RESET ALL STATS AND PROGRESS?')) {
+                state.categoryXP = { career: 0, psychological: 0, mental: 0, physical: 0, scientific: 0 };
+                state.quests = [];
+                saveState();
+                renderHUD();
+                renderQuests();
+            }
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        window.addEventListener('DOMContentLoaded', loadState);
+    </script>
+</body>
+</html>
