@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C-R-T Goals-Quests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>C-R-T Goals-Quests Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
@@ -35,12 +35,16 @@
             color: var(--text-main);
             font-family: var(--font-pixel);
             min-height: 100vh;
-            padding: 15px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
             overflow-x: hidden;
+        }
+
+        @media (min-width: 768px) {
+            body { padding: 15px; }
         }
 
         /* CRT Scanlines Overlay */
@@ -62,7 +66,7 @@
             max-width: 850px;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 15px;
             z-index: 10;
         }
 
@@ -70,18 +74,19 @@
         header {
             border: 4px solid var(--border-color);
             background: var(--card-bg);
-            padding: 16px;
-            box-shadow: 6px 6px 0px #000, 6px 6px 0px 4px var(--border-color);
+            padding: 12px;
+            box-shadow: 4px 4px 0px #000, 4px 4px 0px 4px var(--border-color);
             text-align: center;
         }
 
         h1 {
-            font-size: 1.1rem;
-            letter-spacing: 2px;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
             margin-bottom: 12px;
             text-transform: uppercase;
             color: var(--text-main);
             text-shadow: 2px 2px #000;
+            line-height: 1.4;
         }
 
         .hud-container {
@@ -97,7 +102,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
+            flex-wrap: wrap;
+            gap: 6px;
         }
 
         .level-text { color: #fff; }
@@ -105,7 +112,7 @@
 
         .bar-outer {
             width: 100%;
-            height: 16px;
+            height: 14px;
             background: #222;
             border: 2px solid var(--border-color);
             position: relative;
@@ -129,7 +136,7 @@
         .cat-card-full {
             background: var(--card-bg);
             border: 3px solid var(--border-color);
-            padding: 12px;
+            padding: 10px;
             cursor: pointer;
             box-shadow: 4px 4px 0px #000;
             display: flex;
@@ -153,30 +160,43 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
         }
 
         .cat-title {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #fff;
             text-transform: uppercase;
         }
 
         .cat-level-badge {
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             color: #000;
             background: #fff;
-            padding: 2px 6px;
+            padding: 3px 5px;
             font-weight: bold;
         }
 
+        /* Responsive Grid for Categories */
         .cat-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr; /* Mobile: 1 column */
             gap: 10px;
         }
 
-        @media (min-width: 650px) {
-            .cat-grid { grid-template-columns: repeat(4, 1fr); }
+        @media (min-width: 480px) {
+            .cat-grid { grid-template-columns: repeat(2, 1fr); } /* Tablets: 2 columns */
+        }
+
+        @media (min-width: 768px) {
+            .cat-grid { grid-template-columns: repeat(4, 1fr); } /* Desktop: 4 columns */
+            h1 { font-size: 1.1rem; }
+            .hud-row { font-size: 0.7rem; }
+            .cat-title { font-size: 0.7rem; }
+            .cat-level-badge { font-size: 0.55rem; }
+            .bar-outer { height: 16px; }
+            header { padding: 16px; box-shadow: 6px 6px 0px #000, 6px 6px 0px 4px var(--border-color); }
         }
 
         /* Status Filters */
@@ -194,10 +214,12 @@
             background: #111;
             border: 2px solid #444;
             color: #888;
-            padding: 8px 10px;
+            padding: 10px 8px;
             font-family: var(--font-pixel);
             font-size: 0.5rem;
             cursor: pointer;
+            flex: 1 1 auto; /* Allows buttons to grow on mobile */
+            text-align: center;
         }
 
         .filter-btn.active {
@@ -210,16 +232,14 @@
         /* Main Controls */
         .controls-row {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
+            width: 100%;
         }
 
         .btn-green-main {
             background: var(--btn-green);
             color: #000;
             border: 3px solid var(--border-color);
-            padding: 12px 16px;
+            padding: 14px 12px;
             font-family: var(--font-pixel);
             font-size: 0.65rem;
             font-weight: bold;
@@ -227,9 +247,9 @@
             box-shadow: 4px 4px 0px #000;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             width: 100%;
-            justify-content: center;
         }
 
         .btn-green-main:hover { background: var(--btn-green-hover); }
@@ -239,14 +259,14 @@
         .quest-list {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 15px;
         }
 
         .quest-card {
             background: var(--card-bg);
             border: 4px solid var(--border-color);
             padding: 14px;
-            box-shadow: 5px 5px 0px #000;
+            box-shadow: 4px 4px 0px #000;
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -260,26 +280,28 @@
 
         .quest-header {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column; /* Better for mobile */
             align-items: flex-start;
-            gap: 10px;
+            gap: 8px;
+            padding-right: 60px; /* Space for XP tag */
         }
 
         .quest-title-area {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
         }
 
         .quest-title {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #fff;
-            line-height: 1.3;
+            line-height: 1.4;
+            word-break: break-word;
         }
 
         .quest-category-tag {
             font-size: 0.5rem;
-            padding: 3px 6px;
+            padding: 4px 6px;
             background: #222;
             border: 1px solid #555;
             color: #ccc;
@@ -288,14 +310,27 @@
         }
 
         .status-badge {
-            font-size: 0.55rem;
-            padding: 4px 8px;
+            font-size: 0.5rem;
+            padding: 4px 6px;
             border: 2px solid #fff;
             font-weight: bold;
+            display: inline-block;
         }
         .status-badge.green { background: #00e65c; color: #000; }
         .status-badge.yellow { background: #ffcc00; color: #000; }
         .status-badge.red { background: #ff3344; color: #fff; }
+
+        .xp-reward-tag {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            font-size: 0.5rem;
+            color: #fff;
+            background: #111;
+            padding: 4px 6px;
+            border: 1px dashed #666;
+            text-align: right;
+        }
 
         .quest-dates {
             font-family: var(--font-arcade);
@@ -303,13 +338,13 @@
             color: var(--text-muted);
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 4px;
             background: #000;
-            padding: 6px 8px;
+            padding: 8px;
             border: 1px solid #333;
         }
 
-        .quest-dates span { color: #fff; }
+        .quest-dates span { color: #fff; display: block; margin-top: 2px; }
 
         .progress-box {
             display: flex;
@@ -330,25 +365,18 @@
             font-size: 0.75rem;
         }
 
-        .xp-reward-tag {
-            font-size: 0.55rem;
-            color: #fff;
-            background: #111;
-            padding: 2px 5px;
-            border: 1px dashed #666;
-        }
-
+        /* Mobile First Buttons */
         .quest-actions {
             display: flex;
-            gap: 8px;
             flex-wrap: wrap;
+            gap: 8px;
             margin-top: 4px;
         }
 
         .pixel-btn {
             font-family: var(--font-pixel);
             font-size: 0.55rem;
-            padding: 8px 10px;
+            padding: 12px 10px; /* Taller for touch */
             border: 2px solid var(--border-color);
             cursor: pointer;
             box-shadow: 3px 3px 0px #000;
@@ -357,6 +385,8 @@
             justify-content: center;
             gap: 6px;
             transition: transform 0.05s;
+            flex: 1 1 45%; /* Fill half row on mobile */
+            text-align: center;
         }
 
         .pixel-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
@@ -364,12 +394,21 @@
         .btn-add:hover { background: var(--btn-green-hover); }
         .btn-remove { background: var(--btn-red); color: #fff; font-weight: bold; }
         .btn-remove:hover { background: var(--btn-red-hover); }
-        .btn-complete { background: var(--btn-green); color: #000; font-weight: bold; flex-grow: 1; }
-        .btn-delete { background: var(--btn-red); color: #fff; font-weight: bold; }
+        .btn-complete { background: var(--btn-green); color: #000; font-weight: bold; flex: 1 1 100%; } /* Full row */
+        .btn-delete { background: var(--btn-red); color: #fff; font-weight: bold; flex: 1 1 100%; }
+
+        @media (min-width: 600px) {
+            .quest-header { flex-direction: row; align-items: flex-start; padding-right: 0; }
+            .xp-reward-tag { position: relative; top: 0; right: 0; }
+            .quest-dates span { display: inline; margin-top: 0; }
+            .pixel-btn { flex: 0 1 auto; padding: 10px 14px; }
+            .btn-complete { flex-grow: 1; }
+            .btn-delete { flex: 0 1 auto; }
+        }
 
         /* Reset Section */
         .reset-section {
-            margin-top: 15px;
+            margin-top: 10px;
             padding-top: 15px;
             border-top: 2px dashed #333;
             text-align: center;
@@ -379,14 +418,19 @@
             background: #1a0003;
             color: #ff3344;
             border: 2px solid #ff3344;
-            padding: 10px 14px;
+            padding: 12px 14px;
             font-family: var(--font-pixel);
             font-size: 0.55rem;
             cursor: pointer;
             box-shadow: 3px 3px 0px #000;
+            width: 100%;
         }
 
         .btn-reset-all:hover { background: #ff3344; color: #fff; }
+
+        @media (min-width: 600px) {
+            .btn-reset-all { width: auto; }
+        }
 
         /* Modals */
         .modal-overlay {
@@ -395,9 +439,10 @@
             background: rgba(0, 0, 0, 0.85);
             display: none;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start; /* Fix for mobile keyboards */
             z-index: 1000;
-            padding: 15px;
+            padding: 20px 10px;
+            overflow-y: auto;
         }
 
         .modal-overlay.active { display: flex; }
@@ -405,18 +450,19 @@
         .pixel-modal {
             background: #000000;
             border: 4px solid #ffffff;
-            box-shadow: 8px 8px 0px #000, 0 0 0 4px #000;
+            box-shadow: 6px 6px 0px #000, 0 0 0 4px #000;
             width: 100%;
             max-width: 500px;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
             position: relative;
+            margin: auto; /* Centers when space allows */
         }
 
         .modal-header {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             border-bottom: 2px solid #333;
             padding-bottom: 8px;
@@ -430,49 +476,74 @@
         }
 
         .form-group label {
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             color: var(--text-muted);
+            line-height: 1.4;
         }
 
+        /* iOS Input Fixes */
         .pixel-input, .pixel-select {
             background: #111;
             border: 2px solid var(--border-color);
             color: #fff;
             font-family: var(--font-pixel);
-            font-size: 0.65rem;
-            padding: 10px;
+            font-size: 0.6rem;
+            padding: 12px 10px;
             outline: none;
+            width: 100%;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border-radius: 0;
+        }
+
+        .pixel-select {
+            /* Custom 8-bit style arrow for selects */
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23ffffff" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 35px;
         }
 
         .pixel-input:focus, .pixel-select:focus { border-color: var(--pink-accent); }
 
         .modal-footer {
             display: flex;
-            justify-content: flex-end;
+            flex-wrap: wrap;
             gap: 10px;
             margin-top: 10px;
         }
 
+        .modal-footer .pixel-btn {
+            flex: 1 1 45%;
+        }
+
         .eval-window { text-align: center; align-items: center; }
-        .eval-title { font-size: 0.9rem; line-height: 1.4; margin-top: 10px; }
-        .eval-icon { margin: 15px 0; display: flex; justify-content: center; }
+        .eval-title { font-size: 0.8rem; line-height: 1.4; margin-top: 10px; }
+        .eval-icon { margin: 10px 0; display: flex; justify-content: center; }
         .eval-green { color: #00e65c; }
         .eval-yellow { color: #ffcc00; }
         .eval-red { color: #ff3344; }
-        .eval-desc { font-size: 0.55rem; color: #ccc; line-height: 1.5; margin-bottom: 10px; }
+        .eval-desc { font-size: 0.55rem; color: #ccc; line-height: 1.6; margin-bottom: 10px; word-break: break-word; }
 
         .pixel-icon-svg { image-rendering: pixelated; shape-rendering: crispEdges; }
-        .trophy-svg { width: 64px; height: 64px; }
-        .warning-svg { width: 64px; height: 64px; }
-        .stop-svg { width: 64px; height: 64px; }
+        .trophy-svg, .warning-svg, .stop-svg { width: 56px; height: 56px; }
 
         .empty-state {
             text-align: center;
-            padding: 30px 10px;
+            padding: 30px 15px;
             border: 2px dashed #444;
             color: var(--text-muted);
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             line-height: 1.6;
+        }
+
+        @media (min-width: 600px) {
+            .modal-header { font-size: 0.8rem; }
+            .form-group label { font-size: 0.55rem; }
+            .pixel-input, .pixel-select { font-size: 0.65rem; padding: 10px; }
+            .modal-footer .pixel-btn { flex: 0 1 auto; }
+            .modal-footer { justify-content: flex-end; }
         }
     </style>
 </head>
@@ -526,7 +597,7 @@
                 </div>
             </div>
 
-            <!-- 4 Grid Categories -->
+            <!-- Responsive Grid Categories -->
             <div class="cat-grid">
                 <!-- Psychological -->
                 <div class="cat-card-full" id="catBtn-psychological" onclick="setCategory('psychological')">
@@ -926,7 +997,7 @@
 
         function loadState() {
             try {
-                const saved = localStorage.getItem('retro_quest_tracker_v10');
+                const saved = localStorage.getItem('retro_quest_tracker_v11_mobile');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     if (parsed && typeof parsed === 'object') state = parsed;
@@ -966,14 +1037,21 @@
 
         function saveState() {
             try {
-                localStorage.setItem('retro_quest_tracker_v10', JSON.stringify(state));
+                localStorage.setItem('retro_quest_tracker_v11_mobile', JSON.stringify(state));
             } catch(e) {}
         }
 
         function initDefaultQuests() {
             const now = new Date();
             const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-            const formatDate = (d) => d.toISOString().slice(0, 16);
+            const formatDate = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            };
 
             state.quests = [
                 {
@@ -1183,7 +1261,7 @@
                     if (quest.finalResult === 'green') {
                         statusBadgeHTML = `<span class="status-badge green">COMPLETED (${quest.progress}%)</span>`;
                     } else if (quest.finalResult === 'yellow') {
-                        statusBadgeHTML = `<span class="status-badge yellow">ALMOST COMPLETED (${quest.progress}%)</span>`;
+                        statusBadgeHTML = `<span class="status-badge yellow">ALMOST DONE (${quest.progress}%)</span>`;
                     } else {
                         statusBadgeHTML = `<span class="status-badge red">FAILED (${quest.progress}%)</span>`;
                     }
